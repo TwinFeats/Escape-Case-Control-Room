@@ -40,7 +40,13 @@ PJON<SoftwareBitBang> bus(12);
 
 void send(uint8_t *msg, uint8_t len) {
   bus.send(1, msg, len);
-  bus.update();
+  while (bus.update()) {};//wait for send to be completed
+}
+
+void send(const char *msg, int len) {
+  uint8_t buf[35];
+  memcpy(buf, msg, len);
+  send(buf, len);
 }
 
 void error_handler(uint8_t code, uint16_t data, void *custom_pointer) {
@@ -120,6 +126,7 @@ void checkColorPattern(int red, int green, int blue) {
   if (bestMatch == code[codeCount]) {
     codeCount++;
     if (codeCount == 5) {
+      sendMp3(TRACK_CONTROL_ROOM_ACCESS_GRANTED);
       activated = false;
       digitalWrite(PIN_POWER_LIGHT, LOW);
       send((uint8_t *)"D", 1);
@@ -154,6 +161,7 @@ void initControlRoom() {
 }
 
 void setup() {
+  Serial.begin(9600);
   randomSeed(analogRead(0));
   pinMode(PIN_POWER_LIGHT, OUTPUT);
   digitalWrite(PIN_POWER_LIGHT, LOW);
